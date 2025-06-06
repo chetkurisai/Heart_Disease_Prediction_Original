@@ -1,90 +1,253 @@
-Step 1: Medallion Architecture – Data Engineering
-We implemented the Medallion Architecture (Bronze → Silver → Gold) to ensure scalable, modular, and clean data processing for the heart disease prediction system. This approach separates raw data ingestion from cleaning and feature engineering, improving data traceability and maintainability.
+Heart Disease Prediction Using Medallion Architecture and REST API
+Table of Contents
+Project Overview
 
-Bronze Layer – Raw Data Ingestion
-Purpose: Stores raw heart disease data ingested from the UCI dataset without any modifications.
 
-Details:
-Contains all original columns and unprocessed entries.
-Acts as the source of truth for audits and recovery.
-Silver Layer – Cleaned & Validated Data
-Purpose: Stores cleaned and validated data for further processing.
+Dataset
 
-Transformations Applied:
-Handled missing or null values.
-Converted data types as required.
-Removed duplicates and invalid records.
-Normalized/standardized column names for consistency.
 
-Gold Layer – Model-Ready Data
-Purpose: Final curated dataset used for model training and evaluation.
+Medallion Architecture
 
-Enhancements:
-Created a new binary target column based on heart disease presence.
-Dropped irrelevant columns such as patient ID or dataset index.
-Preserved only medically meaningful features to support predictive modeling.
-Ensured label encoding or transformation where needed.
 
-MongoDB Collections
-Each layer is stored in a separate MongoDB Atlas collection for modular access:
-heart_disease_bronze
-heart_disease_silver
-heart_disease_gold1
-
-Summary
-The Medallion Architecture helped isolate responsibilities between raw ingestion, cleaning, and modeling readiness. It also ensured that:
-No transformation logic is mixed across layers.
-Each step is traceable and reusable.
-Data quality is systematically improved.
-
-Step 2: Final Model Development Summary for Documentation
 Model Development
-We developed multiple classification models to predict heart disease using cleaned and preprocessed data from the Gold layer in MongoDB.
-
-Data Source
-Data was loaded from the heart_disease_gold collection in MongoDB Atlas.
 
 
-The target column was derived by converting the num field:
+REST API Development
 
-target = 1 if num > 0 (presence of heart disease)
-target = 0 otherwise
-Target Variable
-target: Binary classification (0 = no disease, 1 = disease)
 
-Models Trained
-Logistic Regression
-Random Forest
-XGBoost
-Support Vector Machine (SVM)
+Deployment on Render
 
-Evaluation Metrics
-Each model was evaluated on:
-Accuracy
-Precision
-Recall
-F1 Score
-ROC-AUC
 
-Final Model Selection
-Random Forest performed best based on F1 Score and ROC-AUC.
-This model was chosen as the final model for deployment.
+API Documentation
 
-Feature Selection
-Dropped non-informative columns: id, dataset, num
 
-Kept all medically relevant features based on domain knowledge (e.g., cp, chol, thalach, etc.)
+Testing Using Postman
 
-Hyperparameter Tuning
-Default hyperparameters were used initially.
-Advanced tuning (e.g., Grid Search) can be added in future improvements.
 
-Model Saving
-Final model (Random Forest) saved as:
-heart_disease_model.pkl
-Saved using joblib.dump() in the working directory.
+Screenshots
+
+
+Setup Instructions
+
+
+Repository Structure
+
+
+Future Enhancements
+
+
+References
+
+
+Project Overview
+This project predicts the presence of heart disease in patients using the Heart Disease UCI dataset. It implements a Medallion Architecture on MongoDB for layered data processing and develops machine learning classification models trained on refined data. A REST API built with FastAPI serves model predictions, which is deployed on Render for public access.
+Dataset
+Source: Heart Disease UCI Dataset on Kaggle
+
+
+URL: https://www.kaggle.com/datasets/redwankarimsony/heart-disease-data
+
+
+Description: Contains patient features such as age, sex, chest pain type, cholesterol levels, and a binary target indicating heart disease presence (0 = no, 1 = yes).
 
 
 
+Medallion Architecture
+Bronze Layer
+Raw CSV data stored as JSON documents in MongoDB collection heart_disease_bronze.
+
+
+No preprocessing applied at this stage.
+
+
+Silver Layer
+Handles missing values by imputing means for numerical and modes for categorical features.
+
+
+Encodes categorical features numerically (label encoding or one-hot encoding).
+
+
+Stored in heart_disease_silver collection.
+
+
+Gold Layer
+Normalizes numerical features using min-max scaling to range [0, 1].
+
+
+Selects top features based on correlation and domain knowledge for model training.
+
+
+Stored in heart_disease_gold collection.
+
+
+Model Development
+Used data from the Gold layer for training and testing.
+
+
+Models trained: Logistic Regression, Random Forest, XGBoost, SVM.
+
+
+Final model chosen based on highest accuracy, precision, recall, F1-score, and ROC-AUC metrics.
+
+
+Feature selection based on correlation and feature importance from model outputs.
+
+
+Hyperparameter tuning performed using Grid Search for optimal model performance.
+
+
+Data split: 80% training, 20% testing.
+
+
+Final model saved as a .pkl file using joblib for deployment.
+
+
+REST API Development
+Built with FastAPI to serve model predictions.
+
+
+Endpoints:
+
+
+POST /predict: Accepts JSON patient data and returns heart disease prediction.
+
+
+GET /health: Returns status to verify API is running.
+
+
+Includes input validation to ensure valid and complete feature data.
+
+
+Loads the saved model for real-time prediction.
+
+
+Deployment on Render
+API deployed on Render with environment variables configured for MongoDB connection.
+
+
+Publicly accessible URL: https://heart-disease-prediction-tpn4.onrender.com
+API Documentation
+Swagger UI available at /docs for interactive API exploration (FastAPI built-in).
+
+
+Endpoint details:
+
+
+POST /predict
+
+
+Input: JSON with patient features (age, sex, cp, trestbps, chol, fbs, restecg, thalach, exang, oldpeak, slope, ca, thal).
+
+
+Output: JSON with prediction (0 or 1).
+
+
+GET /health
+
+
+Returns HTTP 200 OK to indicate service is up.
+
+
+Testing Using Postman
+Setup POST request with JSON body to /predict.
+
+
+Example JSON input:
+
+
+json
+CopyEdit
+{
+  "age": 60,
+  "sex": 1,
+  "cp": 0,
+  "trestbps": 145,
+  "chol": 233,
+  "fbs": 1,
+  "restecg": 0,
+  "thalach": 150,
+  "exang": 0,
+  "oldpeak": 2.3,
+  "slope": 0,
+  "ca": 0,
+  "thal": 1
+}
+
+Response example:
+
+
+json
+CopyEdit
+{
+  "prediction": 1
+}
+
+Health check GET request to /health returns HTTP status 200.
+
+
+Screenshots of Postman requests and responses included in the screenshots/ directory.
+
+
+Screenshots
+MongoDB Data: Bronze, Silver, and Gold collections showing sample documents.
+
+
+Postman testing for /predict and /health endpoints.
+
+
+Swagger API docs UI screenshot.
+Setup Instructions
+Clone the repository.
+
+
+      Install dependencies: pip install -r requirements.txt
+
+
+Setup MongoDB Atlas and get the connection string.
+
+
+Configure environment variables for MongoDB URI in .env file or directly in the Render dashboard for deployment.
+5. Run API locally:  uvicorn main:app --reload
+Use Postman or Swagger UI to test endpoints locally.
+
+
+
+Repository Structure
+├── data/                      # Raw and processed data files
+|-- documents                   # pdf documents 
+├── notebooks/                 # Jupyter notebooks for data prep and modeling
+├── api/                      # FastAPI source code
+│   ├── main.py               # API entry point
+│   ├── model.pkl             # Saved trained model
+├── screenshots/              # MongoDB and Postman screenshots
+├── requirements.txt          # Python dependencies
+├── README.md                 # Project documentation
+└── .env                      # Environment variables (not committed)
+
+
+Future Enhancements
+Add authentication and user roles for API.
+
+
+Implement batch predictions and logging.
+
+
+Integrate frontend UI for easier data input.
+
+
+Expand model with more advanced feature engineering.
+
+
+References
+Heart Disease UCI Dataset: https://www.kaggle.com/datasets/redwankarimsony/heart-disease-data
+
+
+MongoDB Atlas: https://www.mongodb.com/cloud/atlas
+
+
+FastAPI Documentation: https://fastapi.tiangolo.com/
+
+
+Render Deployment: https://render.com
 
 
